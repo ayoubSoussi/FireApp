@@ -13,6 +13,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 
 import static android.content.ContentValues.TAG;
@@ -21,7 +26,7 @@ import static android.content.ContentValues.TAG;
 public class SignUpActivity extends Activity {
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener ;
-    EditText email,password ;
+    EditText username,email,password ;
 
 
     @Override
@@ -45,26 +50,36 @@ public class SignUpActivity extends Activity {
         };
         email = (EditText)findViewById(R.id.email) ;
         password = (EditText)findViewById(R.id.password) ;
+        username = (EditText)findViewById(R.id.username) ;
     }
     public  void signUP(View v){
-        String Semail = email.getText().toString().trim() ;
+        final String Susername = username.getText().toString().trim() ;
+        final String Semail = email.getText().toString().trim() ;
         String Spassword = password.getText().toString().trim() ;
-        if (Semail.isEmpty()|Spassword.isEmpty()) return ;
+        if (Semail.isEmpty()|Spassword.isEmpty()| userExist(Susername) ){
+            Toast.makeText(SignUpActivity.this,"Please check your informations !",Toast.LENGTH_LONG).show(); ;
+            return ;
+        }
         else {
             mAuth.createUserWithEmailAndPassword(Semail, Spassword)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
-                            // If sign in fails, display a message to the user. If sign in succeeds
-                            // the auth state listener will be notified and logic to handle the
-                            // signed in user can be handled in the listener.
                             if (!task.isSuccessful()) {
-                                Toast.makeText(SignUpActivity.this, "Authentication failed.",
+                                Toast.makeText(SignUpActivity.this, "Please try again !",
                                         Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(SignUpActivity.this, "CONGRATULATIONS",
+                                Toast.makeText(SignUpActivity.this, "Now you are a member !",
                                         Toast.LENGTH_SHORT).show();
+                                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                                DatabaseReference myRef = database.getReference("users");
+                                DatabaseReference myRef2 = database.getReference("usernames");
+                                myRef.child(mAuth.getCurrentUser().getUid()).child("username").setValue(Susername);
+                                myRef.child(mAuth.getCurrentUser().getUid()).child("email").setValue(Semail);
+                                myRef2.child(Susername).setValue(0) ;
+
+
                             }
 
                             // ...
@@ -73,6 +88,26 @@ public class SignUpActivity extends Activity {
         }
 
     }
+    boolean res ;
+    private boolean userExist(final String susername) {
+
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("usernames") ;
+        rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.hasChild(susername)) {
+                    res = true ;
+                }else res = false ;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        return res ;
+    }
+
     @Override
     public void onStart() {
         super.onStart();

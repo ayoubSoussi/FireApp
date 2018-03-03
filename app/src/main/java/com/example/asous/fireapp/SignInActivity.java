@@ -38,6 +38,8 @@ public class SignInActivity extends Activity {
         if (Objects.equals(mAuth.getCurrentUser().getEmail().trim(), email)){
             Toast.makeText(SignInActivity.this, "YOU ARE ALREADY IN",
                     Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(SignInActivity.this,ContactsActivity.class) ;
+            startActivity(intent);
             return ;
         }
         if (email.isEmpty() | password.isEmpty()) return ;
@@ -59,6 +61,8 @@ public class SignInActivity extends Activity {
                             } else {
                                 Toast.makeText(SignInActivity.this, "YOU ARE IN ",
                                         Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(SignInActivity.this,ContactsActivity.class) ;
+                                startActivity(intent);
                             }
 
                             // ...
